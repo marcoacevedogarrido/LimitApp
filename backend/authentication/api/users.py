@@ -16,7 +16,7 @@ from rest_framework.decorators import permission_classes
 class UserModelSerializer(serializers.ModelSerializer):
     username = serializers.CharField()
     password = serializers.CharField(min_length=3)
-
+    
     class Meta:
         model = User
         fields = ('username', 'password')
