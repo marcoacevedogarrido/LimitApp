@@ -11,12 +11,13 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
+from rest_framework import authentication, permissions
 
 
 class UserModelSerializer(serializers.ModelSerializer):
     username = serializers.CharField()
     password = serializers.CharField(min_length=3)
-    
+
     class Meta:
         model = User
         fields = ('username', 'password')
@@ -105,3 +106,12 @@ class RegisterView(APIView):
         user = serializer.save()
         data = UserModelSerializer(user).data
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class ListUsers(APIView):
+    # authentication_classes = [authentication.TokenAuthentication]
+    # permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request, format=None):
+        usernames = [user.username for user in User.objects.all()]
+        return Response(usernames)
