@@ -8,6 +8,8 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
+
+source env/bin/activate  # On Windows use `env\Scripts\activate`
 """
 
 from pathlib import Path
@@ -43,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'rest_auth',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -135,5 +138,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ]
 }
+
 
 LOGIN_REDIRECT_URL = '/api/usuarios'

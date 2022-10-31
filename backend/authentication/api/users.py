@@ -8,7 +8,6 @@ from rest_framework import serializers
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import permission_classes
 
 
 class UserModelSerializer(serializers.ModelSerializer):
@@ -25,8 +24,10 @@ class ListUsers(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
-        usernames = [user.username for user in User.objects.all()]
-        return Response(usernames)
+        user=request.user
+        users = User.objects.filter(id=user.id)
+        serializer = UserModelSerializer(users, many=True)
+        return Response(serializer.data)
 
 
 class UserSignUpSerializer(serializers.Serializer):
