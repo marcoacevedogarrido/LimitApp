@@ -1,10 +1,14 @@
-from .api.users import ListUsers, RegisterView, ProfileView
-from django.urls import path
-from .api.colaborador import ColaboradorView
+from .api.users import UsuarioView, RegisterView
+from django.urls import path, include
+from .api.colaborador import ColaboradorViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+
+router.register(r'api/colaborador', ColaboradorViewSet, basename='colaborador')
 
 urlpatterns = [
-    path('api/usuarios', ListUsers.as_view()),
+    path('', include(router.urls)),
+    path('api/usuario', UsuarioView.as_view()),
     path('api/registro', RegisterView.as_view()),
-    path('api/colaborador', ColaboradorView.as_view()),
-    path('api/perfil', ProfileView.as_view()),
 ]

@@ -140,4 +140,4 @@ REST_FRAMEWORK = {
 }
 
 
-LOGIN_REDIRECT_URL = '/api/usuarios'
+LOGIN_REDIRECT_URL = '/api/usuario'

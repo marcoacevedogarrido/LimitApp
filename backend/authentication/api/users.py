@@ -1,4 +1,3 @@
-
 from django.contrib.auth import password_validation, authenticate
 from rest_framework import status, viewsets, permissions
 from rest_framework.validators import UniqueValidator
@@ -9,31 +8,49 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics
+from .colaborador import ColaboradorModelSerializer
+
 
 class UserModelSerializer(serializers.ModelSerializer):
-    username = serializers.CharField()
-    password = serializers.CharField(min_length=3)
-    first_name = serializers.CharField(min_length=2, max_length=50)
-    last_name = serializers.CharField(min_length=2, max_length=100)
-    email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'first_name', 'last_name', 'email')
+        fields = ('username','first_name','last_name','email', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
 
-class ListUsers(APIView):
+    def create(self, validated_data):
+        user = User.objects.create_user(validated_data['username'], validated_data['email'], validated_data['password'])
+        return user
+
+    def update(self, instance, validated_data):
+        instance.username = validated_data.get('username', instance.username)
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.email = validated_data.get('email', instance.email)
+        return instance
+
+
+class UsuarioView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = UserModelSerializer
 
-    def get(self, request, format=None):
-        user=request.user
-        users = User.objects.filter(id=user.id)
-        serializer = UserModelSerializer(users, many=True)
-        return Response(serializer.data)
+    def get_object(self):
+        if self.request.user.is_authenticated:
+            return self.request.user
+
+    def create(self, request, *args, **kwargs):
+        serializer = UserModelSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        usuario = serializer.save()
+        data = self.get_serializer(User).data
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
-class UserSignUpSerializer(serializers.Serializer):
+class RegisterSerializer(serializers.Serializer):
     first_name = serializers.CharField(min_length=2, max_length=50, write_only=True)
     last_name = serializers.CharField(min_length=2, max_length=100)
     email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
@@ -57,48 +74,12 @@ class UserSignUpSerializer(serializers.Serializer):
 
 
 class RegisterView(APIView):
-    serializer_class = UserSignUpSerializer
+    serializer_class = RegisterSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = UserSignUpSerializer(data=request.data)
+        serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         data = UserModelSerializer(user).data
         return Response(data, status=status.HTTP_201_CREATED)
-
-
-class ProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserModelSerializer
-
-    def get_object(self):
-        if self.request.user.is_authenticated:
-            return self.request.user
-
-    def update(self, instance, validated_data):
-        validated_data.pop('email', None)               # prevenimos el borrado
-        return super().update(instance, validated_data)
-
-
-def validate_password(self, value):
-    return make_password(value)
-
-def validate_username(self, value):
-    value = value.replace(" ", "")  # Ya que estamos borramos los espacios
-    try:
-        user = get_user_model().objects.get(username=value)
-        # Si es el mismo usuario mandando su mismo username le dejamos
-        if user == self.instance:
-            return value
-    except get_user_model().DoesNotExist:
-        return value
-    raise serializers.ValidationError("Nombre de usuario en uso")
-
-def validate_email(self, value):
-    # Hay un usuario con este email ya registrado?
-    try:
-        user = get_user_model().objects.get(email=value)
-    except get_user_model().DoesNotExist:
-        return value
-    # En cualquier otro caso la validación fallará
-    raise serializers.ValidationError("Email en uso")
