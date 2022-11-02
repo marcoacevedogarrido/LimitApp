@@ -1,9 +1,9 @@
 from django.db import models
-from django.contrib.auth.models import User
+from authentication.models.perfil import Perfil
 
 class Colaborador(models.Model):
-    usuario = models.OneToOneField(
-        User,
+    perfil = models.OneToOneField(
+        Perfil,
         on_delete=models.CASCADE,
         related_name='usuario',
         default=True,
